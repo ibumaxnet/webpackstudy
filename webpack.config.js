@@ -2,10 +2,12 @@ const path = require('path')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
-const enabledSourceMap = process.env.NODE_ENV === 'development';
-const isProduction = process.env.NODE_ENV === 'production';
+// production モード以外の場合、変数 enabledSourceMap は true
+const enabledSourceMap = process.env.NODE_ENV !== 'production';
+const VueLoaderPlugin = require('vue-loader/lib/plugin');
 
 module.exports = {
+  mode: 'development',
   entry: path.resolve(__dirname, './src/js/main.js'),
   output: {
     path: path.resolve(__dirname, 'dist'),
@@ -13,7 +15,30 @@ module.exports = {
   },
   devtool: 'source-map',
   module: {
-    rules: [{
+    rules: [
+    	{
+    		test: /\.vue/,
+    		exclude: /node_modules/,
+    		use: [
+    			{
+    				loader: 'vue-loader',
+    			},
+    		],
+    	},
+    	{
+        test: /\.js/,
+        exclude: /node_modules/,
+        use: [{
+          loader: 'babel-loader',
+          options: {
+            presets: [
+              ['@babel/preset-env', { 'targets': '> 0.25%, not dead' }],
+              ['@babel/preset-react'],
+            ],
+          },
+        }, ],
+      },
+      {
         test: /\.(css|scss|sass)$/,
         use: [{
             loader: MiniCssExtractPlugin.loader,
@@ -22,6 +47,7 @@ module.exports = {
             loader: 'css-loader',
             options: {
               url: false,
+              // production モードでなければソースマップを有効に
               sourceMap: enabledSourceMap,
               importLoaders: 2
             }
@@ -29,7 +55,8 @@ module.exports = {
           {
             loader: "postcss-loader",
             options: {
-              sourceMap: true,
+              // production モードでなければソースマップを有効に
+              sourceMap: enabledSourceMap,
               plugins: [
                 require("autoprefixer")({
                   grid: true,
@@ -46,20 +73,32 @@ module.exports = {
           {
             loader: 'sass-loader',
             options: {
+              // production モードでなければソースマップを有効に
               sourceMap: enabledSourceMap,
             }
           },
         ],
       },
       {
-        test: /\.(png|jpg)/,
-        use: [{
-          loader: 'file-loader',
-          options: {
-            esModule: false,
-            name: 'images/[name].[ext]',
-          },
-        }, ],
+        test: /\.(png|jpg|jpeg)/,
+        use: [
+        	{
+          	loader: 'file-loader',
+          	options: {
+          	  esModule: false,
+          	  name: 'images/[name].[ext]',
+          	},
+        	},
+        	{
+        		loader: 'image-webpack-loader',
+        		options: {
+        			mozjpeg: {
+        				progressive: true,
+        				quality: 65,
+        			},
+        		},
+        	},
+        ],
       },
       {
         test: /\.pug/,
@@ -77,6 +116,7 @@ module.exports = {
     ],
   },
   plugins: [
+  	new VueLoaderPlugin(),
     new MiniCssExtractPlugin({
       filename: './css/my.css',
     }),
