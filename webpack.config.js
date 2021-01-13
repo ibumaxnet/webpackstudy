@@ -11,7 +11,7 @@ module.exports = {
   entry: path.resolve(__dirname, './src/js/main.js'),
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: './js/bundle.js',
+    filename: './js/[name]-[hash].js',
   },
   devtool: 'source-map',
   module: {
@@ -95,7 +95,8 @@ module.exports = {
           	loader: 'file-loader',
           	options: {
           	  esModule: false,
-          	  name: 'images/[name].[ext]',
+          	  name: 'images/[name]-[hash].[ext]',
+          	  publicPath: '/',
           	},
         	},
         	{
@@ -127,7 +128,7 @@ module.exports = {
   plugins: [
   	new VueLoaderPlugin(),
     new MiniCssExtractPlugin({
-      filename: './css/my.css',
+      filename: './css/[name]-[hash].css',
     }),
 
     new HtmlWebpackPlugin({
